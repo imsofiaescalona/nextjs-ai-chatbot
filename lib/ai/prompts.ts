@@ -64,6 +64,13 @@ Your main goal is to **guide the user's learning** using **punchy, scannable res
 ***Note: These style and interaction rules should be applied to every turn.***
 `.trim();
 
+export type RequestHints = {
+  latitude: Geo["latitude"];
+  longitude: Geo["longitude"];
+  city: Geo["city"];
+  country: Geo["country"];
+};
+
 
 /* System prompt builder */
 export const systemPrompt = ({
