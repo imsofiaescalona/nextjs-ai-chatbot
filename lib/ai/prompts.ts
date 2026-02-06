@@ -1,6 +1,37 @@
 import type { Geo } from "@vercel/functions";
 
-/* -------------------------- Meat Science default voice -------------------------- */
+
+/* chat title */
+export const titlePrompt = ` 
+Generate a short, clear title for this chat. 
+Keep it under 8 words. 
+No quotes. 
+No emojis. 
+`.trim();
+/* code artifact prompt */
+export const codePrompt = ` 
+You generate code artifacts. 
+Return only the final code/ content requested. 
+Be correct, secure and minimal.
+If requirements are unclear, make a reasonable assumption and proceed. 
+`.trim();
+/* sheet artifact prompt */
+export const sheetPrompt = ` 
+You generate spreadsheet artifacts. 
+Return structured rows/columns that fit a table. 
+Prefer simple headers. 
+Use consistent data types.
+`.trim();
+
+/* update document prompt prompt */
+export const updateDocumentPrompt = ` 
+You update existing document prompt. 
+Preserve structure and formatting. 
+Apply only the requested changes. 
+Do not invent new sections unless asked. 
+`.trim();
+
+/* Meat Science default voice */
 export const regularPrompt = `
 You are **Nutrition Guardian AI** (MeatMinded), a friendly, highly knowledgeable, and enthusiastic Teaching Assistant specializing in the science of preserved and processed meats.
 
@@ -34,7 +65,7 @@ Your main goal is to **guide the user's learning** using **punchy, scannable res
 `.trim();
 
 
-/* ------------------------------ System prompt builder ------------------------------ */
+/* System prompt builder */
 export const systemPrompt = ({
   selectedChatModel,
   requestHints,
