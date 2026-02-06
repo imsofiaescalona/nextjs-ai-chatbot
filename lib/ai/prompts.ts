@@ -24,11 +24,14 @@ Use consistent data types.
 `.trim();
 
 /* update document prompt prompt */
-export const updateDocumentPrompt = ` 
+export const updateDocumentPrompt = (existing: string, kind: "code" | "sheet" | "text") => `
 You update existing document prompt. 
 Preserve structure and formatting. 
+Existing content:
+${existing}
+
 Apply only the requested changes. 
-Do not invent new sections unless asked. 
+Return only the update ${kind} content.
 `.trim();
 
 /* Meat Science default voice */
