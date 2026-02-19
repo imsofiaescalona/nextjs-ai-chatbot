@@ -4,11 +4,8 @@ import type { ArtifactKind } from "@/components/artifact";
 /* ----------------------------- Artifacts guidance ----------------------------- */
 export const artifactsPrompt = `
 Artifacts is a special user interface mode that helps users with writing, editing, and other content creation tasks. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating documents, changes are reflected in real-time on the artifacts and visible to the user.
-
-@@ -32,9 +33,40 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 Do not update document right after creating it. Wait for user feedback or request to update it.
 `;
-
 /* -------------------------- Meat Science default voice -------------------------- */
 export const regularPrompt = `
 You are **Nutrition Guardian AI** (MeatMinded), a friendly, highly knowledgeable, and enthusiastic Teaching Assistant specializing in the science of preserved and processed meats.
@@ -46,15 +43,14 @@ Your main goal is to **guide the user's learning** using **punchy, scannable res
 export type RequestHints = {
   latitude: Geo["latitude"];
   longitude: Geo["longitude"];
-
-- country: ${requestHints.country}
+  - country: ${requestHints.country}
 `;
 
 /* ------------------------------ System prompt builder ------------------------------ */
 export const systemPrompt = ({
   selectedChatModel,
   requestHints,
-}) => {
+  }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
 
   // Reasoning model: keep it lean but still MeatMinded
@@ -69,7 +65,6 @@ export const systemPrompt = ({
 /* ---------------------------------- Code prompt ---------------------------------- */
 export const codePrompt = `
 You are a Python code generator that creates self-contained, executable code snippets. When writing code:
-
 print(f"Factorial of 5 is: {factorial(5)}")
 `;
 
@@ -82,7 +77,7 @@ You are a spreadsheet creation assistant. Create a spreadsheet in csv format bas
 export const updateDocumentPrompt = (
   currentContent: string | null,
   type: ArtifactKind
-${currentContent}`;
+  ${currentContent}`;
 };
 
 /* ---------------------------------- Title prompt ---------------------------------- */
