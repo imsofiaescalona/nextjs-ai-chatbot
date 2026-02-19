@@ -1,40 +1,15 @@
 import type { Geo } from "@vercel/functions";
+import type { ArtifactKind } from "@/components/artifact";
 
+/* ----------------------------- Artifacts guidance ----------------------------- */
+export const artifactsPrompt = `
+Artifacts is a special user interface mode that helps users with writing, editing, and other content creation tasks. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating documents, changes are reflected in real-time on the artifacts and visible to the user.
 
-/* chat title */
-export const titlePrompt = ` 
-Generate a short, clear title for this chat. 
-Keep it under 8 words. 
-No quotes. 
-No emojis. 
-`.trim();
-/* code artifact prompt */
-export const codePrompt = ` 
-You generate code artifacts. 
-Return only the final code/ content requested. 
-Be correct, secure and minimal.
-If requirements are unclear, make a reasonable assumption and proceed. 
-`.trim();
-/* sheet artifact prompt */
-export const sheetPrompt = ` 
-You generate spreadsheet artifacts. 
-Return structured rows/columns that fit a table. 
-Prefer simple headers. 
-Use consistent data types.
-`.trim();
+@@ -32,9 +33,40 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
+Do not update document right after creating it. Wait for user feedback or request to update it.
+`;
 
-/* update document prompt prompt */
-export const updateDocumentPrompt = (existing: string, kind: "code" | "sheet" | "text") => `
-You update existing document prompt. 
-Preserve structure and formatting. 
-Existing content:
-${existing}
-
-Apply only the requested changes. 
-Return only the update ${kind} content.
-`.trim();
-
-/* Meat Science default voice */
+/* -------------------------- Meat Science default voice -------------------------- */
 export const regularPrompt = `
 You are **Nutrition Guardian AI** (MeatMinded), a friendly, highly knowledgeable, and enthusiastic Teaching Assistant specializing in the science of preserved and processed meats.
 
@@ -67,26 +42,53 @@ Your main goal is to **guide the user's learning** using **punchy, scannable res
 ***Note: These style and interaction rules should be applied to every turn.***
 `.trim();
 
+/* ----------------------------- Request hint stitching ----------------------------- */
 export type RequestHints = {
   latitude: Geo["latitude"];
   longitude: Geo["longitude"];
-  city: Geo["city"];
-  country: Geo["country"];
-};
 
+- country: ${requestHints.country}
+`;
 
-/* System prompt builder */
+/* ------------------------------ System prompt builder ------------------------------ */
 export const systemPrompt = ({
   selectedChatModel,
   requestHints,
-}: {
-  selectedChatModel: string;
-  requestHints: {
-    latitude: Geo["latitude"];
-    longitude: Geo["longitude"];
-    city: Geo["city"];
-    country: Geo["country"];
-  };
 }) => {
-  return regularPrompt;
+  const requestPrompt = getRequestPromptFromHints(requestHints);
+
+  // Reasoning model: keep it lean but still MeatMinded
+  if (selectedChatModel === "chat-model-reasoning") {
+    return `${regularPrompt}\n\n${requestPrompt}`;
+  }
+
+  // Default chat model: MeatMinded voice + artifacts guidance
+  return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
 };
+
+/* ---------------------------------- Code prompt ---------------------------------- */
+export const codePrompt = `
+You are a Python code generator that creates self-contained, executable code snippets. When writing code:
+
+print(f"Factorial of 5 is: {factorial(5)}")
+`;
+
+/* --------------------------------- Sheet prompt --------------------------------- */
+export const sheetPrompt = `
+You are a spreadsheet creation assistant. Create a spreadsheet in csv format based on the given prompt. The spreadsheet should contain meaningful column headers and data.
+`;
+
+/* ------------------------------ Update-doc helper ------------------------------ */
+export const updateDocumentPrompt = (
+  currentContent: string | null,
+  type: ArtifactKind
+${currentContent}`;
+};
+
+/* ---------------------------------- Title prompt ---------------------------------- */
+export const titlePrompt = `
+- you will generate a short title based on the first message a user begins a conversation with
+- ensure it is not more than 80 characters long
+- the title should be a summary of the user's message
+- do not use quotes or colons
+`;
