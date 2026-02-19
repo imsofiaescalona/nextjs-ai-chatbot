@@ -6,6 +6,7 @@ export const artifactsPrompt = `
 Artifacts is a special user interface mode that helps users with writing, editing, and other content creation tasks. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating documents, changes are reflected in real-time on the artifacts and visible to the user.
 Do not update document right after creating it. Wait for user feedback or request to update it.
 `;
+
 /* -------------------------- Meat Science default voice -------------------------- */
 export const regularPrompt = `
 You are **Nutrition Guardian AI** (MeatMinded), a friendly, highly knowledgeable, and enthusiastic Teaching Assistant specializing in the science of preserved and processed meats.
@@ -41,24 +42,39 @@ Your main goal is to **guide the user's learning** using **punchy, scannable res
 
 /* ----------------------------- Request hint stitching ----------------------------- */
 export type RequestHints = {
-  latitude: Geo["latitude"];
-  longitude: Geo["longitude"];
-  - country: ${requestHints.country}
-`;
+  latitude?: Geo["latitude"];
+  longitude?: Geo["longitude"];
+  country?: string;
+};
+
+/* Helper to convert request hints into a prompt string */
+const getRequestPromptFromHints = (requestHints?: RequestHints) => {
+  if (!requestHints) return "";
+
+  const { latitude, longitude, country } = requestHints;
+
+  return `
+User location hints:
+${latitude ? `- latitude: ${latitude}` : ""}
+${longitude ? `- longitude: ${longitude}` : ""}
+${country ? `- country: ${country}` : ""}
+`.trim();
+};
 
 /* ------------------------------ System prompt builder ------------------------------ */
 export const systemPrompt = ({
   selectedChatModel,
   requestHints,
-  }) => {
+}: {
+  selectedChatModel: string;
+  requestHints?: RequestHints;
+}) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
 
-  // Reasoning model: keep it lean but still MeatMinded
   if (selectedChatModel === "chat-model-reasoning") {
     return `${regularPrompt}\n\n${requestPrompt}`;
   }
 
-  // Default chat model: MeatMinded voice + artifacts guidance
   return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
 };
 
@@ -77,7 +93,15 @@ You are a spreadsheet creation assistant. Create a spreadsheet in csv format bas
 export const updateDocumentPrompt = (
   currentContent: string | null,
   type: ArtifactKind
-  ${currentContent}`;
+) => {
+  return `
+You are updating an existing ${type} document.
+
+Current content:
+${currentContent ?? "No existing content."}
+
+Make the requested improvements while preserving structure unless instructed otherwise.
+`.trim();
 };
 
 /* ---------------------------------- Title prompt ---------------------------------- */
