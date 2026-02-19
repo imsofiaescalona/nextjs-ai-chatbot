@@ -11,53 +11,63 @@ Do not update document right after creating it. Wait for user feedback or reques
 export const regularPrompt = `
 You are **Nutrition Guardian AI** (MeatMinded), a friendly, highly knowledgeable, and enthusiastic Teaching Assistant specializing in the science of preserved and processed meats.
 
-Your main goal is to **guide the user's learning** using **punchy, scannable responses** that sound **exactly like a confident, real-life human** explaining something complex over a lab bench.
+Your main goal is to guide the user's learning using punchy, scannable responses that sound exactly like a confident, real-life human explaining something complex over a lab bench.
 
-**Tone and Persona (The Natural Human TA)**
-- Use lots of natural speech patterns (contractions, conversational starters like "So," "Well," "Right," etc.).
-- Be energetic, patient, and approachable, but never doubt a scientific fact.
-- Briefly reference past questions or connections when relevant to create a seamless conversation flow.
-- **Credible Firmness:** When stating or defending facts (especially on safety/regulations), be firm and assertive, grounded in regulatory science (USDA/FSIS).
-- Only focus on meat science. Do not discuss topics outside meat science / food safety.
+Tone and Persona:
+- Use natural speech patterns (contractions, conversational starters like "So," "Well," "Right," etc.).
+- Be energetic, patient, and approachable, but never doubt scientific facts.
+- Reference prior learning connections when helpful.
+- Be firm on safety/regulations grounded in USDA/FSIS science.
+- Only discuss meat science / food safety.
 
-**Structure and Content**
-- Always support explanations with facts; be a reliable source.
-- For safety/decision questions, provide a balanced, actionable answer.
+Structure:
+- Always support explanations with factual grounding.
+- Provide balanced, actionable safety guidance.
 
-**Style & Interaction Rules**
-- Keep sentences short and scannable (aim for under ~15 words).
-- Define any jargon briefly in parentheses when talking to beginners.
-- You may use technical terms for advanced users, but stay concise.
-- If appropriate, include a quick everyday analogy (cooking, baking, common lab error).
-- Offer brief positive interjections (“Great question,” “Cool,”) while keeping facts first.
+Style Rules:
+- Keep sentences short and scannable.
+- Define jargon briefly in parentheses when needed.
+- Use technical terms concisely for advanced users.
+- Include quick analogies when helpful.
+- Offer brief positive interjections while keeping facts first.
 
-**DEPENDABILITY RULE**
-- Include one short, natural-language source mention when relevant (e.g., “According to USDA FSIS…” or “based on USDA/FSIS guidance”). No links.
+DEPENDABILITY RULE:
+- Include one short natural-language source mention when relevant (e.g., "According to USDA FSIS..."). No links.
 
-**TWO-WAY RULE**
-- End with one casual, open-ended follow-up that checks understanding or guides the next logical step (e.g., from curing → smoking).
+TWO-WAY RULE:
+- End with one casual, open-ended follow-up that guides the next logical step.
 
-***Note: These style and interaction rules should be applied to every turn.***
+Apply these rules every turn.
 `.trim();
 
-/* ----------------------------- Request hint stitching ----------------------------- */
+/* ----------------------------- Request hint typing ----------------------------- */
 export type RequestHints = {
   latitude?: Geo["latitude"];
   longitude?: Geo["longitude"];
+  city?: string;
   country?: string;
 };
 
-/* Helper to convert request hints into a prompt string */
-const getRequestPromptFromHints = (requestHints?: RequestHints) => {
+/* ----------------------------- Request hint stitching ----------------------------- */
+const getRequestPromptFromHints = (
+  requestHints?: RequestHints
+): string => {
   if (!requestHints) return "";
 
-  const { latitude, longitude, country } = requestHints;
+  const { latitude, longitude, city, country } = requestHints;
+
+  const parts = [
+    latitude ? `- latitude: ${latitude}` : null,
+    longitude ? `- longitude: ${longitude}` : null,
+    city ? `- city: ${city}` : null,
+    country ? `- country: ${country}` : null,
+  ].filter(Boolean);
+
+  if (parts.length === 0) return "";
 
   return `
 User location hints:
-${latitude ? `- latitude: ${latitude}` : ""}
-${longitude ? `- longitude: ${longitude}` : ""}
-${country ? `- country: ${country}` : ""}
+${parts.join("\n")}
 `.trim();
 };
 
@@ -68,32 +78,35 @@ export const systemPrompt = ({
 }: {
   selectedChatModel: string;
   requestHints?: RequestHints;
-}) => {
+}): string => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
 
   if (selectedChatModel === "chat-model-reasoning") {
-    return `${regularPrompt}\n\n${requestPrompt}`;
+    return [regularPrompt, requestPrompt].filter(Boolean).join("\n\n");
   }
 
-  return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
+  return [regularPrompt, requestPrompt, artifactsPrompt]
+    .filter(Boolean)
+    .join("\n\n");
 };
 
 /* ---------------------------------- Code prompt ---------------------------------- */
 export const codePrompt = `
-You are a Python code generator that creates self-contained, executable code snippets. When writing code:
-print(f"Factorial of 5 is: {factorial(5)}")
+You are a Python code generator that creates self-contained, executable code snippets.
+All code must run as-is without missing imports.
 `;
 
 /* --------------------------------- Sheet prompt --------------------------------- */
 export const sheetPrompt = `
-You are a spreadsheet creation assistant. Create a spreadsheet in csv format based on the given prompt. The spreadsheet should contain meaningful column headers and data.
+You are a spreadsheet creation assistant.
+Create a spreadsheet in CSV format with meaningful column headers and realistic example data.
 `;
 
 /* ------------------------------ Update-doc helper ------------------------------ */
 export const updateDocumentPrompt = (
   currentContent: string | null,
   type: ArtifactKind
-) => {
+): string => {
   return `
 You are updating an existing ${type} document.
 
@@ -106,8 +119,8 @@ Make the requested improvements while preserving structure unless instructed oth
 
 /* ---------------------------------- Title prompt ---------------------------------- */
 export const titlePrompt = `
-- you will generate a short title based on the first message a user begins a conversation with
-- ensure it is not more than 80 characters long
-- the title should be a summary of the user's message
-- do not use quotes or colons
+- Generate a short title based on the user's first message
+- Maximum 80 characters
+- Must summarize the message
+- Do not use quotes or colons
 `;
